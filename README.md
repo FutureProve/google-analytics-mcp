@@ -178,13 +178,36 @@ on the server.
 
 #### 1. Enable APIs ✅
 
-[Enable](https://support.google.com/googleapi/answer/6158841) the same two APIs
-as for local setup:
+[Enable](https://support.google.com/googleapi/answer/6158841) the following APIs
+in your Google Cloud project:
 
 - [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com)
 - [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com)
+- [Cloud Firestore API](https://console.cloud.google.com/apis/library/firestore.googleapis.com)
 
-#### 2. Create an OAuth 2.0 client 🔑
+#### 2. Set up Firestore 🗄️
+
+The server uses Firestore to persist OAuth client registrations across Cloud Run
+instances and restarts. This ensures MCP clients that cache their registration
+(such as ChatGPT) continue to work after deployments or scaling events.
+
+1. Open [Firestore](https://console.cloud.google.com/firestore) in the Google
+   Cloud Console.
+
+1. If prompted, select **Native mode** and choose a location close to your Cloud
+   Run region.
+
+1. Grant the Cloud Run service account the **Cloud Datastore User** role
+   (`roles/datastore.user`). If you are using the default Compute Engine service
+   account, run:
+
+   ```shell
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+     --member="serviceAccount:YOUR_PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+     --role="roles/datastore.user"
+   ```
+
+#### 3. Create an OAuth 2.0 client 🔑
 
 1. Open [APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials)
    in the Google Cloud Console.
@@ -199,7 +222,7 @@ as for local setup:
 
 1. Click **Create** and note the **Client ID** and **Client secret**.
 
-#### 3. Build and push the image with Cloud Build 🐳
+#### 4. Build and push the image with Cloud Build 🐳
 
 [Cloud Build](https://cloud.google.com/build) builds and pushes the image
 without requiring Docker locally. Substitute your Artifact Registry repository
@@ -210,7 +233,7 @@ gcloud builds submit \
   --tag REGION-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPO/google-analytics-mcp:latest .
 ```
 
-#### 4. First deploy — get the service URL ☁️
+#### 5. First deploy — get the service URL ☁️
 
 Deploy without `ANALYTICS_MCP_BASE_URL` first so Cloud Run can assign the
 service URL:
@@ -230,7 +253,7 @@ FASTMCP_HOST=0.0.0.0"
 Note the **Service URL** printed at the end of the output, e.g.
 `https://YOUR_SERVICE_NAME-1234567890.REGION.run.app`.
 
-#### 5. Update OAuth redirect URI and redeploy ☁️
+#### 6. Update OAuth redirect URI and redeploy ☁️
 
 1. Return to your OAuth client in the
    [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
@@ -255,7 +278,7 @@ Note the **Service URL** printed at the end of the output, e.g.
    FASTMCP_HOST=0.0.0.0"
    ```
 
-#### 6. Connect from claude.ai 🤖
+#### 7. Connect from claude.ai 🤖
 
 1. Open [claude.ai](https://claude.ai) and go to **Settings → Integrations**.
 1. Add a new integration with the URL:

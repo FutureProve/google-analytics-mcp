@@ -23,6 +23,9 @@ import os
 from fastmcp import FastMCP
 from fastmcp.server.auth.providers.google import GoogleProvider
 from fastmcp.tools.base import Tool
+from google.cloud.firestore_v1 import AsyncClient as FirestoreAsyncClient
+
+from analytics_mcp.storage import FirestoreKeyValue
 
 from analytics_mcp.tools.admin.info import (
     get_account_summaries,
@@ -51,6 +54,7 @@ _CLIENT_SECRET = os.environ.get("ANALYTICS_MCP_OAUTH_CLIENT_SECRET")
 _BASE_URL = os.environ.get("ANALYTICS_MCP_BASE_URL", "http://localhost:8080")
 
 if _CLIENT_ID and _CLIENT_SECRET:
+    _client_storage = FirestoreKeyValue(FirestoreAsyncClient())
     _auth = GoogleProvider(
         client_id=_CLIENT_ID,
         client_secret=_CLIENT_SECRET,
@@ -60,6 +64,7 @@ if _CLIENT_ID and _CLIENT_SECRET:
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/analytics.readonly",
         ],
+        client_storage=_client_storage,
     )
     mcp = FastMCP("Google Analytics MCP Server", auth=_auth)
 else:
